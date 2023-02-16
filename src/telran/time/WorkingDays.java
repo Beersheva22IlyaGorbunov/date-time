@@ -14,18 +14,21 @@ import java.util.stream.Stream;
 import javax.naming.OperationNotSupportedException;
 
 public class WorkingDays implements TemporalAdjuster {
-	DayOfWeek[] dayWorks;
-	int workingDays;
+	private int workingDays;
+	private DayOfWeek[] dayOffs;
 	
 	@Override
 	public Temporal adjustInto(Temporal temporal) {
 		if (!temporal.isSupported(ChronoField.DAY_OF_WEEK)) {
 			throw new UnsupportedOperationException();
 		}
-		temporal = setNearestWorkingDay(temporal);
-		temporal = temporal.plus(workingDays / dayWorks.length, ChronoUnit.WEEKS);
-		int restOfDays = workingDays % dayWorks.length;
-		temporal = addRestOfWeek(temporal, restOfDays);
+		int workingWeekLength = DayOfWeek.values().length - dayOffs.length;
+		if (workingWeekLength > 0) {
+			temporal = setNearestWorkingDay(temporal);
+			temporal = temporal.plus(workingDays / workingWeekLength, ChronoUnit.WEEKS);
+			int restOfDays = workingDays % workingWeekLength;
+			temporal = addRestOfWeek(temporal, restOfDays);
+		}
 		return temporal;
 	}
 
@@ -48,26 +51,15 @@ public class WorkingDays implements TemporalAdjuster {
 	
 	private boolean isWorkingDay(int dayOfWeek) {
 		int i = 0;
-		while (i < dayWorks.length && dayOfWeek != dayWorks[i].getValue()) {
+		while (i < dayOffs.length && dayOfWeek != dayOffs[i].getValue()) {
 			i++;
 		}
-		return i == dayWorks.length ? false : true;
+		return i == dayOffs.length ? true : false;
 	}
 	
 	public WorkingDays(int workingDays, DayOfWeek[] dayOffs) {
-		dayWorks = getWorkingDays(dayOffs);
+		this.dayOffs = dayOffs;
 		this.workingDays = workingDays;
 	}
 
-	private DayOfWeek[] getWorkingDays(DayOfWeek[] dayOffs) {
-		Set<DayOfWeek> dayOffsSet = Set.of(dayOffs);
-		DayOfWeek[] res = new DayOfWeek[7 - dayOffsSet.size()];
-		int index = 0;
-		for (DayOfWeek dayOfWeek : DayOfWeek.values()) {
-			if (!dayOffsSet.contains(dayOfWeek)) {
-				res[index++] = dayOfWeek;
-			}
-		}
-		return res;
-	}
 }

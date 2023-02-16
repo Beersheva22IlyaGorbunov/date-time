@@ -41,19 +41,22 @@ class DateTimeTests {
 	void canadaTimeZonesTest() {
 		ZonedDateTime current = ZonedDateTime.now();
 		Set<String> zones = ZoneId.getAvailableZoneIds();
-		zones = zones.stream().filter(zone -> zone.contains("Canada")).collect(Collectors.toSet());
-		for (String zone : zones) {
-			DateTimeFormatter dtf = DateTimeFormatter.ofPattern("kk:mm:ss dd-MM-YY");
-			ZonedDateTime thisZoneTime = current.withZoneSameInstant(ZoneId.of(zone));
-			System.out.println(zone + " ".repeat(25 - zone.length()) + thisZoneTime.format(dtf));
-		}
+		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("kk:mm:ss dd-MM-YY");
+		zones.stream()
+				.filter(zone -> zone.contains("Canada"))
+				.forEach(zone -> {
+					ZonedDateTime thisZoneTime = current.withZoneSameInstant(ZoneId.of(zone));
+					System.out.println(zone + " ".repeat(25 - zone.length()) + thisZoneTime.format(dtf));
+				});
 	}
 	
 	@Test
 	void nextFriday13Test() {
-		LocalDate february2023 = LocalDate.of(2023, 2, 1);
+		LocalDate firstJanuary2023 = LocalDate.of(2023, 1, 1);
+		LocalDate firstFriday13in2023 = LocalDate.of(2023, 1, 13);
 		LocalDate secondFriday13in2023 = LocalDate.of(2023, 10, 13);
-		assertEquals(secondFriday13in2023, february2023.with(new NextFriday13()));
+		assertEquals(firstFriday13in2023, firstJanuary2023.with(new NextFriday13()));
+		assertEquals(secondFriday13in2023, firstFriday13in2023.with(new NextFriday13()));
 	}
 	
 	@Test
